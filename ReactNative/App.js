@@ -7,8 +7,9 @@ import {
   Image,
   Touchable,
   TouchableOpacity,
+  FlatList,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import RNCalendarEvents from 'react-native-calendar-events';
 import Video from 'react-native-video';
 import { Benchmark } from 'react-component-benchmark';
@@ -25,41 +26,43 @@ const App = () => {
   };
 
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       <Button onPress={handleStart} title="RUN" />
       <Benchmark
-        component={Videos}
+        component={MemorizedVideos}
         samples={1}
         onComplete={handleComplete}
         ref={ref}
         timeout={1000000}
         type="mount"
       />
-      {/* <TenThousandEmptyViews />
-      <TenThousandTextFields />
-      <HundredCalendarEvent />
-      <ImagePicker /> */}
-      {/* <Videos /> */}
+      {/* <MemorizedTenThousandTextFields /> */}
+      <MemorizedVideos />
     </View>
   );
 };
 
 export default App;
 
+const TenThousandArray = [...Array(10000)].fill(0);
 
-
-const TenThousandTextFields = () => {
+const EmptyView = () => {
+  return <View />;
+};
+const MemorizedTenThousandEmptyViews = () => {
+  const renderItem = useCallback(({ item }) => {
+    return <EmptyView item={item} />;
+  }, []);
   return (
-    <View>
-      <ScrollView>
-        {[...Array(10000)].map((_, index) => (
-          <Text key={index}>Hello World</Text>
-        ))}
-      </ScrollView>
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={TenThousandArray}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index}
+      />
     </View>
   );
 };
-
 const TenThousandEmptyViews = () => {
   return (
     <View>
@@ -70,7 +73,26 @@ const TenThousandEmptyViews = () => {
   );
 };
 
-const HundredCalendarEvent = () => {
+const MemorizedText = memo(({ item }) => {
+  return <Text>Hello World</Text>;
+});
+const MemorizedTenThousandTextFields = () => {
+  const renderText = useCallback(({ item }) => {
+    return <MemorizedText item={item} />;
+  }, []);
+
+  return (
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={TenThousandArray}
+        renderItem={renderText}
+        keyExtractor={(item, index) => index}
+      />
+    </View>
+  );
+};
+
+const MemorizedHundredCalendarEvent = () => {
   const [isPermission, setIsPermission] = useState(false);
 
   useEffect(() => {
@@ -99,8 +121,16 @@ const HundredCalendarEvent = () => {
   );
 };
 
+const CalendarText = memo(({ item }) => {
+  return <Text>{item.toString()}</Text>;
+});
+
 const CalendarData = () => {
   const [calendarData, setCalendarData] = useState([]);
+
+  const renderItem = useCallback(({ item }) => {
+    return <CalendarText item={item} />;
+  }, []);
 
   useEffect(() => {
     RNCalendarEvents.findCalendars().then(result => {
@@ -114,54 +144,72 @@ const CalendarData = () => {
   }, []);
 
   return (
-    <View>
-      {calendarData.map((c, i) => (
-        <Text key={i}>{c.toString()}</Text>
-      ))}
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={calendarData}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index}
+      />
     </View>
   );
 };
 
-const ImagePicker = () => {
+const ImagePlaceHolder = ({ item }) => {
   return (
-    <View>
-      <ScrollView>
-        {[...Array(10000)].map((_, index) => (
-          <Image
-            key={index}
-            resizeMode="contain"
-            style={{
-              height: 240,
-              aspectRatio: 1,
-              alignSelf: 'center',
-              marginBottom: 10,
-            }}
-            source={require('./assets/image.png')}
-          />
-        ))}
-      </ScrollView>
+    <Image
+      resizeMode="contain"
+      style={{
+        height: 240,
+        aspectRatio: 1,
+        alignSelf: 'center',
+        marginBottom: 10,
+      }}
+      source={require('./assets/image.png')}
+    />
+  );
+};
+
+const MemorizedImagePicker = () => {
+  const renderItem = useCallback(({ item }) => {
+    return <ImagePlaceHolder item={item} />;
+  }, []);
+  return (
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={TenThousandArray}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index}
+      />
     </View>
   );
 };
 
-const Videos = () => {
+const DummyVideo = memo(({ item }) => {
   return (
-    <View>
-      <ScrollView>
-        {[...Array(5)].map((_, index) => (
-          <Video
-            key={index}
-            source={require('./assets/video.mp4')}
-            style={{
-              width: '100%',
-              aspectRatio: 16 / 9,
-              backgroundColor: 'black',
-            }}
-            resizeMode={'contain'}
-            repeat
-          />
-        ))}
-      </ScrollView>
+    <Video
+      source={require('./assets/video.mp4')}
+      style={{
+        width: '100%',
+        aspectRatio: 16 / 9,
+        backgroundColor: 'black',
+      }}
+      resizeMode={'contain'}
+      repeat
+    />
+  );
+});
+
+const MemorizedVideos = () => {
+  const renderItem = useCallback(({ item }) => {
+    return <DummyVideo item={item} />;
+  }, []);
+  return (
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={[...Array(5)].fill(0)}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index}
+      />
     </View>
   );
 };
